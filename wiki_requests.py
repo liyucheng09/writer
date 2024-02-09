@@ -14,6 +14,7 @@ WIKI_API_ENDPOINT = "https://en.wikipedia.org/w/api.php"
 
 def parse_to_plain_text(wikitext):
     parsed = mwparserfromhell.parse(wikitext)
+    parsed_str = str(parsed)
 
     pure_text = parsed.strip_code()
 
@@ -23,7 +24,8 @@ def parse_to_plain_text(wikitext):
         if tag.contents.strip() == "":
             tag.contents = f"[Ref: {ref_name}]"
         else:
-            ref_dict[ref_name] = tag.contents.strip()
+            citation = mwparserfromhell.parse(tag.contents).filter_templates()[0]
+            ref_dict[ref_name] = {key.name.strip(): citation.get(key.name).value.strip() for key in reversed(citation.params)}
             tag.contents = ''
     for template in parsed.filter_templates(matches = 'Main'):
         main_ref = template.get(1).value.strip()
@@ -41,7 +43,7 @@ def parse_to_plain_text(wikitext):
     return {
         "plain_text": pure_text,
         "text_with_refs": text_with_refs,
-        "parsed": str(parsed),
+        "parsed": parsed_str,
         "ref_dict": ref_dict
     }
 
@@ -85,5 +87,6 @@ def fetch_content(title, date=None):
 
 if __name__ == "__main__":
     r = fetch_content('The_Last_of_Us')
+    r['title'] = 'The Last of Us - Wikipedia'
     with open('parsed.json', 'w') as f:
         json.dump(r, f, indent=2, ensure_ascii=False)

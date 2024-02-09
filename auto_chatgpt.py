@@ -77,6 +77,13 @@ class ChatGPTAutomation:
         """
 
         return self.driver.find_elements(by=By.CSS_SELECTOR, value='div.text-base')
+    
+    def new_session(self):
+        """ Opens a new tab in the browser and navigates to the chatgpt website """
+
+        links = self.driver.find_elements(By.CSS_SELECTOR, 'a.group')
+        links[0].click()
+        time.sleep(4)
 
     def save_conversation(self, file_name):
         """
@@ -100,6 +107,25 @@ class ChatGPTAutomation:
             for i in range(0, len(chatgpt_conversation), 2):
                 file.write(
                     f"prompt: {chatgpt_conversation[i].text}\nresponse: {chatgpt_conversation[i + 1].text}\n\n{delimiter}\n\n")
+    
+    def restart_the_last_utterance(self, new_prompt):
+        elements = self.driver.find_elements(By.CSS_SELECTOR, 'div.text-base')
+        last_utterance = elements[-3]
+        buttons = last_utterance.find_elements(By.TAG_NAME, 'button')
+
+        if buttons:
+            buttons[0].click()
+
+        textarea = last_utterance.find_element(By.TAG_NAME, 'textarea')
+        if textarea:
+            textarea.clear()
+            textarea.send_keys('thanks')
+        
+        buttons = last_utterance.find_elements(By.TAG_NAME, 'button')
+        if buttons:
+            buttons[0].click()
+
+        time.sleep(120)
 
     def return_last_response(self):
         """ :return: the text of the last chatgpt response """
